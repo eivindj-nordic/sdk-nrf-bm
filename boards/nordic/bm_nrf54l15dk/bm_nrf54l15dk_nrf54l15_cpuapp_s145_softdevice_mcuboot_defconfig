@@ -15,6 +15,9 @@ CONFIG_BOOT_BANNER=n
 # Enable MPU
 CONFIG_ARM_MPU=y
 
+# Enable SoftDevice
+CONFIG_SOFTDEVICE=y
+
 # Enable hardware stack protection
 CONFIG_HW_STACK_PROTECTION=y
 
