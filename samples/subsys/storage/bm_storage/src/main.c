@@ -13,8 +13,11 @@
 #include <zephyr/storage/flash_map.h>
 #include <zephyr/sys/util.h>
 
+#if CONFIG_SOFTDEVICE
 #include <bm/softdevice_handler/nrf_sdh.h>
 #include <nrf_soc.h>
+#endif
+
 #include <hal/nrf_gpio.h>
 #include <board-config.h>
 
@@ -93,7 +96,11 @@ static int storage_inits(void)
 
 	struct bm_storage_config storage_config_a = {
 		.evt_handler = bm_storage_evt_handler_a,
+#if CONFIG_SOFTDEVICE
 		.api = &bm_storage_sd_api,
+#else
+		.api = &bm_storage_rram_api,
+#endif
 		.addr = STORAGE_A_ADDR,
 		.size = STORAGE_A_SIZE,
 	};
@@ -106,7 +113,11 @@ static int storage_inits(void)
 
 	struct bm_storage_config storage_config_b = {
 		.evt_handler = bm_storage_evt_handler_b,
+#if CONFIG_SOFTDEVICE
 		.api = &bm_storage_sd_api,
+#else
+		.api = &bm_storage_rram_api,
+#endif
 		.addr = STORAGE_B_ADDR,
 		.size = STORAGE_B_SIZE,
 	};
@@ -230,11 +241,13 @@ int main(void)
 
 	LOG_INF("Storage sample started");
 
+#if CONFIG_SOFTDEVICE
 	err = nrf_sdh_enable_request();
 	if (err) {
 		LOG_ERR("Failed to enable SoftDevice, err %d", err);
 		goto idle;
 	}
+#endif
 
 	err = storage_inits();
 	if (err) {
@@ -264,11 +277,13 @@ int main(void)
 		goto idle;
 	}
 
+#if CONFIG_SOFTDEVICE
 	err = nrf_sdh_disable_request();
 	if (err) {
 		LOG_ERR("Failed to disable SoftDevice, err %d", err);
 		goto idle;
 	}
+#endif
 
 	err = storage_writes();
 	if (err) {

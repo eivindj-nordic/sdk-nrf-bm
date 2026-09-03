@@ -1,0 +1,56 @@
+/*
+ * Copyright (c) 2025 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+/dts-v1/;
+
+#include <nordic/nrf54l15_cpuapp.dtsi>
+#include "bm_nrf54l15dk_nrf54l15_cpuapp_common.dtsi"
+
+/ {
+	chosen {
+		zephyr,flash = &cpuapp_rram;
+		zephyr,code-partition = &slot0_partition;
+		zephyr,sram = &app_ram;
+	};
+};
+
+&cpuapp_rram {
+	partitions {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		slot0_partition: partition@0 {
+			compatible = "zephyr,mapped-partition";
+			label = "slot0";
+			reg = <0x00000000 DT_SIZE_K(1519)>;
+		};
+
+		storage_partition: partition@17BC00 {
+			compatible = "zephyr,mapped-partition";
+			label = "storage";
+			reg = <0x0017AC00 DT_SIZE_K(4)>;
+			ranges = <0x0 0x17AC00 DT_SIZE_K(4)>;
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			storage0_partition: partition@0000 {
+				compatible = "zephyr,mapped-partition";
+				label = "storage0";
+				reg = <0x00000000 DT_SIZE_K(4)>;
+			};
+		};
+	};
+};
+
+&cpuapp_sram {
+	status = "okay";
+
+	app_ram: sram@0 {
+		label = "app_ram";
+		reg = <0x0 (DT_SIZE_K(255) - 0x80 + 0x200)>;
+	};
+};
