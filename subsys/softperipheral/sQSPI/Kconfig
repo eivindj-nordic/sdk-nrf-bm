@@ -1,0 +1,26 @@
+#
+# Copyright (c) 2026 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+
+choice BM_SOFTPERIPHERAL_SELECTION
+
+config BM_SOFTPERIPHERAL_SQSPI
+	bool "sQSPI"
+
+endchoice
+
+if BM_SOFTPERIPHERAL_SQSPI
+
+config BM_SOFTPERIPHERAL_SQSPI_MAX_NUM_DATA_LINES
+	int "Maximum data lines"
+	range 1 8
+	default 2
+
+config BM_SOFTPERIPHERAL_SQSPI_TRANSFERS_PER_REQUEST
+	int "Transfers per request"
+	default 1
+
+endif # BM_SOFTPERIPHERAL_SQSPI

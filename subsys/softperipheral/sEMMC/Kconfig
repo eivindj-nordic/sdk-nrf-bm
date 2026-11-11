@@ -1,0 +1,24 @@
+#
+# Copyright (c) 2026 Nordic Semiconductor
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+
+choice BM_SOFTPERIPHERAL_SELECTION
+
+config BM_SOFTPERIPHERAL_SEMMC
+	bool "sEMMC"
+
+endchoice
+
+if BM_SOFTPERIPHERAL_SEMMC
+
+config BM_SOFTPERIPHERAL_SEMMC_RESPONSE_SIZE
+	int "Word size of eMMC response"
+	default 4
+
+config BM_SOFTPERIPHERAL_SEMMC_TRANSFERS_PER_REQUEST
+	int "Transfers per request"
+	default 1
+
+endif # BM_SOFTPERIPHERAL_SEMMC
