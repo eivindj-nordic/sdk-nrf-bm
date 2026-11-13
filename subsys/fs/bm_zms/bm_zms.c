@@ -28,6 +28,8 @@ static zms_op_t cur_op; /* Current bm_zms operation. */
 static zms_op_t *p_cur_op;
 static atomic_t cur_op_result = ATOMIC_INIT(0);
 static atomic_t queue_process_start = ATOMIC_INIT(false);
+static atomic_t cur_op_storage_outstanding = ATOMIC_INIT(0);
+static atomic_t zms_retire_pending = ATOMIC_INIT(false);
 
 #ifdef CONFIG_BM_ZMS_LOOKUP_CACHE
 static inline size_t zms_lookup_cache_pos(uint32_t id);
@@ -40,6 +42,8 @@ static inline size_t zms_al_size(struct bm_zms_fs *fs, size_t len);
 static int zms_flash_block_move(struct bm_zms_fs *fs);
 static void zms_verify_space(zms_op_t *op);
 static int bm_zms_clear_execute(void);
+static void queue_process(void);
+static bool zms_try_retire(void);
 
 /* The number of queued operations.
  * Incremented by queue_start() and decremented by queue_has_next().
@@ -100,6 +104,36 @@ static bool queue_has_next(void)
 	}
 
 	return false;
+}
+
+static bool zms_try_retire(void)
+{
+	if (!atomic_get(&zms_retire_pending)) {
+		return true;
+	}
+
+	if (atomic_get(&cur_op_storage_outstanding) != 0) {
+		return false;
+	}
+
+	if (p_cur_op != NULL && bm_storage_is_busy(&p_cur_op->fs->zms_bm_storage)) {
+		return false;
+	}
+
+	atomic_set(&zms_retire_pending, false);
+	p_cur_op = NULL;
+
+	if (!queue_has_next()) {
+		LOG_DBG("No more elements in the queue, exiting.");
+		return true;
+	}
+
+	LOG_DBG("There are more elements in the queue, processing next one. %u",
+		(uint32_t)queued_op_cnt);
+	atomic_set(&queue_process_start, true);
+	queue_process();
+
+	return true;
 }
 
 static void queue_process(void)
@@ -239,24 +273,12 @@ completed:
 		event_prepare(&evt);
 		event_send(&evt, cur_op.fs);
 
-		/* Zero the pointer to the current operation so that this function
-		 * will fetch a new one from the queue next time it is run.
-		 */
-		p_cur_op = NULL;
-
-		/* The result of the operation must be reset upon re-entering the loop to ensure
-		 * the next operation won't be affected by eventual errors in previous operations.
-		 */
-		result = 0;
-
-		if (!queue_has_next()) {
-			LOG_DBG("No more elements in the queue, exiting.");
-			/* No more elements left. Nothing to do. */
-			break;
+		atomic_set(&zms_retire_pending, true);
+		if (!zms_try_retire()) {
+			return;
 		}
-		LOG_DBG("There are more elements in the queue, processing next one. %u",
-			(uint32_t)queued_op_cnt);
-		atomic_set(&queue_process_start, true);
+
+		break;
 	}
 }
 
@@ -288,10 +310,25 @@ static void zms_event_handler(struct bm_storage_evt *p_evt)
 {
 	zms_op_t *p_op;
 
-	if (p_evt->ctx != NULL) {
-		p_op = (zms_op_t *)(p_evt->ctx);
+	if (p_evt->ctx == NULL) {
+		LOG_ERR("%s: p_evt->ctx is NULL", __func__);
+		return;
+	}
 
-		if (is_end_of_ate_write_step(p_op)) {
+	if (p_evt->ctx != (void *)&cur_op) {
+		LOG_WRN("%s: stale storage cb (ctx %p)", __func__, p_evt->ctx);
+		return;
+	}
+
+	if (p_cur_op == NULL && !atomic_get(&zms_retire_pending)) {
+		LOG_WRN("%s: unexpected storage cb", __func__);
+		return;
+	}
+
+	atomic_dec(&cur_op_storage_outstanding);
+	p_op = (zms_op_t *)(p_evt->ctx);
+
+	if (is_end_of_ate_write_step(p_op)) {
 #ifdef CONFIG_BM_ZMS_LOOKUP_CACHE
 			/* 0xFFFFFFFF is a special-purpose identifier. Exclude it from the cache */
 			if (p_op->ate_entry.id != ZMS_HEAD_ID) {
@@ -301,17 +338,14 @@ static void zms_event_handler(struct bm_storage_evt *p_evt)
 #endif
 			p_op->fs->ate_wra -= zms_al_size(p_op->fs, sizeof(struct zms_ate));
 		}
-	} else {
-		/* Should never happen. */
-		LOG_ERR("%s: p_evt->ctx is NULL", __func__);
-		return;
-	}
 	atomic_set(&queue_process_start, true);
 	atomic_set(&cur_op_result, p_evt->result);
 
 	if (p_evt->is_async) {
 		queue_process();
 	}
+
+	zms_try_retire();
 }
 
 #ifdef CONFIG_BM_ZMS_LOOKUP_CACHE
@@ -696,6 +730,7 @@ static int zms_flash_al_wrt(struct bm_zms_fs *fs)
 	const uint8_t *data8;
 	off_t offset;
 	size_t len;
+	int rc;
 
 	if (!cur_op.len) {
 		zms_al_wrt_next_op(fs);
@@ -720,7 +755,12 @@ static int zms_flash_al_wrt(struct bm_zms_fs *fs)
 	cur_op.len = 0;
 
 	zms_al_wrt_next_op(fs);
-	return bm_storage_write(&fs->zms_bm_storage, offset, data8, len, (void *)&cur_op);
+	atomic_inc(&cur_op_storage_outstanding);
+	rc = bm_storage_write(&fs->zms_bm_storage, offset, data8, len, (void *)&cur_op);
+	if (rc) {
+		atomic_dec(&cur_op_storage_outstanding);
+	}
+	return rc;
 }
 
 /* basic flash read from bm_zms address */
@@ -879,8 +919,10 @@ static int zms_flash_erase_sector(struct bm_zms_fs *fs, uint64_t addr)
 #ifdef CONFIG_BM_ZMS_LOOKUP_CACHE
 	zms_lookup_cache_invalidate(fs, SECTOR_NUM(addr));
 #endif
+	atomic_inc(&cur_op_storage_outstanding);
 	rc = bm_storage_erase(&fs->zms_bm_storage, offset, fs->sector_size, &cur_op);
 	if (rc) {
+		atomic_dec(&cur_op_storage_outstanding);
 		return rc;
 	}
 

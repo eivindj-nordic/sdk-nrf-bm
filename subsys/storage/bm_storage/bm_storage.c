@@ -184,6 +184,10 @@ bool bm_storage_is_busy(const struct bm_storage *storage)
 		return false;
 	}
 
+	if (storage->api->is_busy == NULL) {
+		return false;
+	}
+
 	return storage->api->is_busy(storage);
 }
 
