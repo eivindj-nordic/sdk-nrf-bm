@@ -118,7 +118,15 @@ endchoice
 
 config BM_BOOT_BOOTCONF_LOCK_WRITES
 	bool "Protect bootloader's NVM from writes"
-	depends on SOC_NRF54L15_CPUAPP || SOC_NRF54L10_CPUAPP || SOC_NRF54L05_CPUAPP || SOC_NRF54LV10A_CPUAPP || SOC_NRF54LC10A_CPUAPP
+	depends on SOC_NRF54L15_CPUAPP || \
+		   SOC_NRF54L10_CPUAPP || \
+		   SOC_NRF54L05_CPUAPP || \
+		   SOC_NRF54LM20A_CPUAPP || \
+		   SOC_NRF54LM20B_CPUAPP || \
+		   SOC_NRF54LS05A_CPUAPP || \
+		   SOC_NRF54LS05B_CPUAPP || \
+		   SOC_NRF54LV10A_CPUAPP || \
+		   SOC_NRF54LC10A_CPUAPP
 	help
 	  Sets RRAMC's BOOTCONF region protection to disable writes.
 
@@ -203,8 +211,8 @@ config SOFTDEVICE_FILE
 	default "$(ZEPHYR_NRF_BM_MODULE_DIR)/components/softdevice/nrf54l/s145/s145_nrf54l05_11.0.0-1.prototype_softdevice.hex" if SOFTDEVICE_S145 && SOC_NRF54L05
 	default "$(ZEPHYR_NRF_BM_MODULE_DIR)/components/softdevice/nrf54l/s145/s145_nrf54l10_11.0.0-1.prototype_softdevice.hex" if SOFTDEVICE_S145 && SOC_NRF54L10
 	default "$(ZEPHYR_NRF_BM_MODULE_DIR)/components/softdevice/nrf54l/s145/s145_nrf54l15_11.0.0-1.prototype_softdevice.hex" if SOFTDEVICE_S145 && SOC_NRF54L15
-	default "$(ZEPHYR_NRF_BM_MODULE_DIR)/components/softdevice/nrf54lm/s115/s115_nrf54lm20_11.0.0-1.prototype_softdevice.hex" if SOFTDEVICE_S115 && SOC_NRF54LM20A
-	default "$(ZEPHYR_NRF_BM_MODULE_DIR)/components/softdevice/nrf54lm/s145/s145_nrf54lm20_11.0.0-1.prototype_softdevice.hex" if SOFTDEVICE_S145 && SOC_NRF54LM20A
+	default "$(ZEPHYR_NRF_BM_MODULE_DIR)/components/softdevice/nrf54lm/s115/s115_nrf54lm20_11.0.0-1.prototype_softdevice.hex" if SOFTDEVICE_S115 && (SOC_NRF54LM20A || SOC_NRF54LM20B)
+	default "$(ZEPHYR_NRF_BM_MODULE_DIR)/components/softdevice/nrf54lm/s145/s145_nrf54lm20_11.0.0-1.prototype_softdevice.hex" if SOFTDEVICE_S145 && (SOC_NRF54LM20A || SOC_NRF54LM20B)
 	default "$(ZEPHYR_NRF_BM_MODULE_DIR)/components/softdevice/nrf54ls/s115/s115_nrf54ls05_11.0.0-1.prototype_softdevice.hex" if SOFTDEVICE_S115 && (SOC_NRF54LS05A || SOC_NRF54LS05B)
 	default "$(ZEPHYR_NRF_BM_MODULE_DIR)/components/softdevice/nrf54ls/s145/s145_nrf54ls05_11.0.0-1.prototype_softdevice.hex" if SOFTDEVICE_S145 && (SOC_NRF54LS05A || SOC_NRF54LS05B)
 	default "$(ZEPHYR_NRF_BM_MODULE_DIR)/components/softdevice/nrf54lv_nrf54lc/s115/s115_nrf54lv10_11.0.0-1.prototype_softdevice.hex" if SOFTDEVICE_S115 && SOC_NRF54LV10A
