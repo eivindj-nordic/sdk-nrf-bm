@@ -5,8 +5,8 @@
  */
 
 /* Override NCS default. */
-#include "bm_nrf54lm20dk_nrf54lm20a_peripherals.dtsi"
-#include "bm_nrf54lm20dk_nrf54lm20a_oscillator.dtsi"
+#include "bm_nrf54lm20dk_nrf54lm20a20b_peripherals.dtsi"
+#include "bm_nrf54lm20dk_nrf54lm20a20b_oscillator.dtsi"
 
 /delete-node/ &cpuapp_sram;
 

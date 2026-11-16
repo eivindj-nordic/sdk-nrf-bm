@@ -7,7 +7,7 @@
 /dts-v1/;
 
 #include <nordic/nrf54lm20a_cpuapp.dtsi>
-#include "bm_nrf54lm20dk_nrf54lm20a_cpuapp_common.dtsi"
+#include "bm_nrf54lm20dk_nrf54lm20a20b_cpuapp_common.dtsi"
 
 / {
 	/* Placed at the end of SRAM, but adjusted to 1kB boundary
@@ -92,7 +92,7 @@
 &cpuapp_sram {
 	status = "okay";
 
-	/* Override setting in bm_nrf54lm20dk_nrf54lm20a_cpuapp_common.dtsi
+	/* Override setting in bm_nrf54lm20dk_nrf54lm20a20b_cpuapp_common.dtsi
 	 * to adjust sram size to not overlap with retainedmem
 	 * * (here we ignore the extra 320 bytes at the top end)
 	 */

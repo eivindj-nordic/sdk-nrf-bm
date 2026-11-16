@@ -13,6 +13,16 @@ board:
           cpucluster: cpuapp
           variants:
             - name: mcuboot
+    - name: nrf54lm20b
+      variants:
+        - name: s115_softdevice
+          cpucluster: cpuapp
+          variants:
+            - name: mcuboot
+        - name: s145_softdevice
+          cpucluster: cpuapp
+          variants:
+            - name: mcuboot
 runners:
   run_once:
     '--recover':
@@ -27,6 +37,11 @@ runners:
               - bm_nrf54lm20dk/nrf54lm20a/cpuapp/s115_softdevice/mcuboot
               - bm_nrf54lm20dk/nrf54lm20a/cpuapp/s145_softdevice
               - bm_nrf54lm20dk/nrf54lm20a/cpuapp/s145_softdevice/mcuboot
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s115_softdevice
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s115_softdevice/mcuboot
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s145_softdevice
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s145_softdevice/mcuboot
     '--erase':
       - runners:
           - nrfjprog
@@ -40,6 +55,11 @@ runners:
               - bm_nrf54lm20dk/nrf54lm20a/cpuapp/s115_softdevice/mcuboot
               - bm_nrf54lm20dk/nrf54lm20a/cpuapp/s145_softdevice
               - bm_nrf54lm20dk/nrf54lm20a/cpuapp/s145_softdevice/mcuboot
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s115_softdevice
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s115_softdevice/mcuboot
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s145_softdevice
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s145_softdevice/mcuboot
     '--reset':
       - runners:
           - nrfjprog
@@ -53,3 +73,8 @@ runners:
               - bm_nrf54lm20dk/nrf54lm20a/cpuapp/s115_softdevice/mcuboot
               - bm_nrf54lm20dk/nrf54lm20a/cpuapp/s145_softdevice
               - bm_nrf54lm20dk/nrf54lm20a/cpuapp/s145_softdevice/mcuboot
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s115_softdevice
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s115_softdevice/mcuboot
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s145_softdevice
+              - bm_nrf54lm20dk/nrf54lm20b/cpuapp/s145_softdevice/mcuboot
